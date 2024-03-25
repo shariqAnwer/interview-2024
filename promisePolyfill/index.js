@@ -1,9 +1,43 @@
-console.log("--start--");
+//write a promise polyfill
+class MyPromise {
+  //declaring private variables
+  #thens = [];
+  #catchs = [];
+  #finallys = [];
+  constructor(cb) {
+    const resolve = this.resolve.bind(this);
+    const reject = this.reject.bind(this);
 
-//write a promise
+    setTimeout(() => cb(resolve, reject), 1);
+  }
+
+  resolve(value) {
+    this.#thens.forEach((func) => func(value));
+    this.#finallys.forEach((func) => func());
+  }
+  reject(error) {
+    this.#catchs.forEach((func) => func(error));
+    this.#finallys.forEach((func) => func());
+  }
+
+  then(cb) {
+    this.#thens.push(cb);
+    return this;
+  }
+
+  catch(cb) {
+    this.#catchs.push(cb);
+    return this;
+  }
+
+  finally(cb) {
+    this.#finallys.push(cb);
+    return this;
+  }
+}
 
 function promiseA(a) {
-  return new Promise((resolve, reject) => {
+  return new MyPromise((resolve, reject) => {
     setTimeout(() => {
       if (typeof a !== "number") return reject("Invalid Input");
       resolve(a * a);
@@ -13,38 +47,5 @@ function promiseA(a) {
 
 promiseA(2)
   .then((res) => console.log(res))
-  .catch((err) => console.log(err))
+  .catch((error) => console.log(error))
   .finally(() => console.log("Done"));
-
-//create a promise polyfill
-
-class MyPromise {
-  //declaring private variables
-  #thens = [];
-  #catchs = [];
-  #finallys = [];
-  constructor(cb) {
-    cb(this.resolve, this.reject);
-  }
-
-  resolve(value) {
-    this.#thens.forEach((cb) => cb(value));
-    this.#finallys.forEach((cb) => cb());
-  }
-  reject(error) {
-    this.#catchs.forEach((cb) => cb(error));
-    this.#finallys.forEach((cb) => cb());
-  }
-
-  then() {
-    this.#thens.push(cb);
-  }
-
-  catch(cb) {
-    this.#catchs.push(cb);
-  }
-
-  finally(cb) {
-    this.#finallys.push(cb);
-  }
-}
